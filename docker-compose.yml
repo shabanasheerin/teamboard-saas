@@ -1,0 +1,57 @@
+# Full stack with MySQL + Redis:   docker compose up --build
+# Then open http://localhost:3000   (demo data is created; see README for logins)
+# For a real deployment change JWT_SECRET, the database passwords, and set SEED_DEMO_DATA to false.
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: teamboard
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://mysql:3306/teamboard?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      CACHE_TYPE: redis
+      REDIS_HOST: redis
+      REDIS_HEALTH: "true"
+      JWT_SECRET: change-this-demo-secret-change-this-demo-secret-1234
+      SEED_DEMO_DATA: "true"
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8081:8081"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  mysql_data:
