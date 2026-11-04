@@ -26,7 +26,7 @@ cd backend
 mvn spring-boot:run
 ```
 Wait for `Started TeamBoardApplication`. It uses port **8081**. The tables are created automatically in the
-`teamboard` database, and demo data for two companies is added on the first start.
+`teamboard` database. It starts empty (no demo data).
 
 **Step 2 - frontend** (another terminal)
 ```bash
@@ -35,33 +35,25 @@ npm install
 npm run dev
 ```
 
-**Step 3** - open http://localhost:5173
+**Step 3** - open http://localhost:5173 and click **Create a workspace** to sign up your own company. You become its Admin.
 
 Tests: `cd backend && mvn test`. API docs (local only): http://localhost:8081/swagger-ui.html
 
-## Demo logins (local / demo mode only)
+## Try it out
 
-| Company | Role | Email | Password |
-|---|---|---|---|
-| Acme Technologies | Admin | admin@acme.com | Admin@123 |
-| Acme Technologies | Manager | manager@acme.com | Manager@123 |
-| Acme Technologies | Member | ravi@acme.com | Member@123 |
-| Globex Corp | Admin | admin@globex.com | Admin@123 |
-
-**See multi-tenancy working:** log in as `admin@globex.com`. You see only Globex's project.
-Log in as `admin@acme.com` and you see only Acme's two projects. Same app, same database, separate data.
-You can also click **Create a workspace** on the login page to sign up a brand-new company.
-
-**See real-time working:** open two browsers (or one normal and one private window). Log in as the Acme manager in one
-and as Ravi in the other, both on the WEB project board. Move a task in one window and it moves in the other.
-Assign Ravi a task and his bell lights up straight away.
+1. Click **Create a workspace** and sign up your company. You become the Admin.
+2. **Projects** > **New project** (for example name `Website Revamp`, key `WEB`), then open it and click **New task**.
+3. **Team** > **Add person**: add a Member with a temporary password. They must choose their own password at first login.
+4. **Live updates:** open a second browser (or a private window) and log in as the Member. Assign them a task, then move
+   cards on the board. The Member's bell and board update straight away, without a refresh.
+5. **Separate companies:** sign up a second company with a different email. It starts empty and cannot see the first company's data.
 
 ## Run with Docker (MySQL + Redis)
 
 ```bash
 docker compose up --build
 ```
-Open http://localhost:3000. Same demo logins. For a real server use `SPRING_PROFILES_ACTIVE=prod` with
+Open http://localhost:3000 and click **Create a workspace**. (The compose file creates two demo companies when `SEED_DEMO_DATA` is `"true"`; set it to `"false"` to start empty.) For a real server use `SPRING_PROFILES_ACTIVE=prod` with
 `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` set (and `CACHE_TYPE=redis` to use Redis).
 
 ## How multi-tenancy works (shared database, shared schema)
@@ -111,14 +103,7 @@ Open http://localhost:3000. Same demo logins. For a real server use `SPRING_PROF
 | Comment on tasks | yes | yes | yes |
 | See the activity log | yes | yes | no |
 
-## Interview talking points
-
-- Shared-schema multi-tenancy, why `orgId` is on every query, and what the alternatives are (schema per tenant, database per tenant)
-- Access token vs refresh token, rotation, and reuse detection
-- Why cached users are evicted when a role changes (and the cache is `simple` locally, Redis in Docker)
-- Sending WebSocket messages only after the database commit (`AfterCommit`)
-- Pessimistic lock on the project row so task numbers (WEB-1, WEB-2 ...) never repeat
-- DTO records so entities never reach the API
+ 
 
 ## Known limits (honest list)
 
